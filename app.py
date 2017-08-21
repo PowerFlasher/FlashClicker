@@ -8,16 +8,22 @@ import psutil
 from tkinter import *
 from tkinter import ttk
 from tkinter import font
+from window_manager import WindowManager
 
 class MainActivity(Frame):
 
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
         # handle
-        self.handle = 264094
+        self.__window_manager = WindowManager()
+        self.handle = 222
         top_frame = Frame()
         top_frame.pack(side=TOP)
         center_frame = Frame(width=150, height=150, background="#e6ffe6")
+        labelsFrame = ttk.Labelframe(center_frame, text='Target Program', labelanchor=N+S, width=150, height=50)
+        ttk.Label(labelsFrame, text="Text - Doc..").grid(column=0, row=0)
+        labelsFrame.pack()
+        center_frame.pack_propagate(False)
         center_frame.pack(side=TOP)
         bottom_frame = Frame()
         bottom_frame.pack(side=BOTTOM)
@@ -58,27 +64,43 @@ class MainActivity(Frame):
         target_window.tk.call('wm', 'iconphoto', target_window._w, self.target_icon)
         target_window.wm_title("Target Program")
         # listbox = MultiColumnListbox(target_window)
-        tree = ttk.Treeview(target_window)
+        windows = self.__window_manager.getWindows()
+        tree = ttk.Treeview(target_window, columns=("name","pid"), show="headings")
+        vsb = ttk.Scrollbar(target_window, orient="vertical", command=tree.yview)
+        vsb.pack(side='right', fill='y')
+        tree.configure(yscrollcommand=vsb.set)
+        # tree["columns"] = ("pid")
+        # tree.column("two", width=100)
+        tree.column("name", width=200)
+        tree.heading("name", text="Name", anchor=W)
+        tree.column("pid", width=100)
+        tree.heading("pid", text="PID", anchor=W)
+        # tree.heading("two", text="column B")
+        for window in windows:
+            tree.insert("", 'end', text=window[0], values=(window[1], window[0]))
 
-        tree["columns"] = ("one", "two")
-        tree.column("one", width=100)
-        tree.column("two", width=100)
-        tree.heading("one", text="coulmn A")
-        tree.heading("two", text="column B")
+        # tree.insert("", 0, text="Line 1", values=("1A", "1b"))
 
-        tree.insert("", 0, text="Line 1", values=("1A", "1b"))
+        # id2 = tree.insert("", 1, "dir2", text="Dir 2")
+        # tree.insert(id2, "end", "dir 2", text="sub dir 2", values=("2A", "2B"))
 
-        id2 = tree.insert("", 1, "dir2", text="Dir 2")
-        tree.insert(id2, "end", "dir 2", text="sub dir 2", values=("2A", "2B"))
+        # ##alternatively:
+        # tree.insert("", 3, "dir3", text="Dir 3")
+        # tree.insert("dir3", 3, text=" sub dir 3", values=("3A", " 3B"))
+        tree.pack(expand=True)
+        self.target_icon = PhotoImage(file="icons/target.png")
+        button_target_program = Button(target_window, compound=LEFT, text="Target Program", image=self.target_icon, command= lambda: self.set_handle(tree.item(tree.selection()), target_window))
+        button_target_program.icon = self.target_icon
+        button_target_program.pack()
 
-        ##alternatively:
-        tree.insert("", 3, "dir3", text="Dir 3")
-        tree.insert("dir3", 3, text=" sub dir 3", values=("3A", " 3B"))
-
-        tree.pack()
+    def set_handle(self, selection, window):
+        if selection['values'] is not '':
+            self.handle = int(selection['values'][1])
+            window.destroy()
 
     def show_program(self):
         # win32gui.ShowWindow(self.handle, 5)
+        print(self.__window_manager.getWindows())
         print('alala')
 
     def key_press(self, key, time_press):
@@ -89,9 +111,9 @@ class MainActivity(Frame):
     def toggle_button(self):
         if self.button_toggle.config('relief')[-1] == 'sunken':
             self.button_toggle.config(relief="raised", image=self.play_icon)
-            self.key_press(win32con.VK_F5, 1.0)
         else:
             self.button_toggle.config(relief="sunken", image=self.stop_icon)
+            self.key_press(win32con.VK_F5, 1.0)
 
 class MultiColumnListbox(object):
     """use a ttk.TreeView as a multicolumn ListBox"""
