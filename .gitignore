@@ -95,9 +95,13 @@ ENV/
 # mypy
 .mypy_cache/
 
+# pycache
+__pycache__
+
 # .idea
 .idea
 
 # Sublime workspace and project
-.sublime-workspace
-.sublime-project
+*.sublime-workspace
+*.sublime-project
+test.txt

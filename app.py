@@ -8,7 +8,9 @@ import psutil
 from tkinter import *
 from tkinter import ttk
 from tkinter import font
+from tkinter import filedialog
 from window_manager import WindowManager
+from script import Script
 
 class MainActivity(Frame):
 
@@ -16,20 +18,43 @@ class MainActivity(Frame):
         Frame.__init__(self, *args, **kwargs)
         # handle
         self.__window_manager = WindowManager()
-        self.handle = 222
+        self.__script = Script()
+        self.sevenFont = font.Font(family="Helvetica", size=7)
+        self.eightFont = font.Font(family="Helvetica", size=8)
+        self.tenFont = font.Font(family="Helvetica", size=10)
+        s = ttk.Style()
+        s.configure('Green.TLabelframe.Label', font=('courier', 8, 'bold'))
+        s.configure('Green.TLabelframe.Label', foreground ='green')
         top_frame = Frame()
         top_frame.pack(side=TOP)
         center_frame = Frame(width=150, height=150, background="#e6ffe6")
-        labelsFrame = ttk.Labelframe(center_frame, text='Target Program', labelanchor=N+S, width=150, height=50)
-        ttk.Label(labelsFrame, text="Text - Doc..").grid(column=0, row=0)
-        labelsFrame.pack()
+        # Target Program Label
+        target_labelsFrame = ttk.Labelframe(center_frame, text='Target Program', labelanchor=N+S, width=150, height=50, style="Green.TLabelframe")
+        ttk.Label(target_labelsFrame, text="Name:", font=self.sevenFont).grid(column=0, row=0, sticky='W')
+        self.target_name = StringVar()
+        ttk.Label(target_labelsFrame, textvariable=self.target_name, font=self.sevenFont).grid(column=1, row=0, sticky='W')
+        ttk.Label(target_labelsFrame, text="PID:", font=self.sevenFont).grid(column=0, row=1, sticky='W')
+        self.target_pid = StringVar()
+        ttk.Label(target_labelsFrame, textvariable=self.target_pid, font=self.sevenFont).grid(column=1, row=1, sticky='W')
+        target_labelsFrame.pack(fill="both")
+        # End Target Program Label
+        # Script data Label
+        data_labelsFrame = ttk.Labelframe(center_frame, text='Script Data', labelanchor=N+S, width=150, height=50, style="Green.TLabelframe")
+        ttk.Label(data_labelsFrame, text="Title:", font=self.sevenFont).grid(column=0, row=0, sticky='W')
+        self.data_title = StringVar()
+        ttk.Label(data_labelsFrame, textvariable=self.data_title, font=self.sevenFont).grid(column=1, row=0, sticky='W')
+        ttk.Label(data_labelsFrame, text="Shortcuts:", font=self.sevenFont).grid(column=0, row=1, sticky='W')
+        self.data_shortcuts = StringVar()
+        ttk.Label(data_labelsFrame, textvariable=self.data_shortcuts, font=self.sevenFont).grid(column=1, row=1, sticky='W')
+        data_labelsFrame.pack(fill="both")
+        # End Script data Label
         center_frame.pack_propagate(False)
         center_frame.pack(side=TOP)
         bottom_frame = Frame()
         bottom_frame.pack(side=BOTTOM)
         # text="Open"
         open_icon = PhotoImage(file="icons/folder-open.png")
-        button_open = Button(top_frame, image=open_icon)
+        button_open = Button(top_frame, image=open_icon, command=self.open_file)
         button_open.icon = open_icon
         # text="Target Program"
         self.target_icon = PhotoImage(file="icons/target.png")
@@ -58,6 +83,12 @@ class MainActivity(Frame):
         self.button_toggle.grid(row=0, column=3)
         button_info.grid(row=0, column=4)
         progress_bar.pack()
+
+    def open_file(self):
+        self.__script.load_json(filedialog.askopenfilename())
+        self.data_title.set(self.__script.title)
+        self.data_shortcuts.set(', '.join(str(x[0]) for x in self.__script.shortcuts))
+
 
     def target_program(self):
         target_window = Toplevel(self)
@@ -95,89 +126,29 @@ class MainActivity(Frame):
 
     def set_handle(self, selection, window):
         if selection['values'] is not '':
-            self.handle = int(selection['values'][1])
+            self.__window_manager.set_handle(int(selection['values'][1]))
+            self.target_name.set((selection['values'][0][:23] + '..') if len(selection['values'][0]) > 23 else selection['values'][0])
+            self.target_pid.set(selection['values'][1])
             window.destroy()
 
     def show_program(self):
-        # win32gui.ShowWindow(self.handle, 5)
-        print(self.__window_manager.getWindows())
-        print('alala')
+        self.__window_manager.set_foreground()
 
     def key_press(self, key, time_press):
-        win32api.PostMessage(self.handle, win32con.WM_KEYDOWN, key, 0)
+        handle = self.__window_manager.get_handle()
+        win32api.PostMessage(handle, win32con.WM_KEYDOWN, key, 0)
         time.sleep(time_press)
-        win32api.PostMessage(self.handle, win32con.WM_KEYUP, key, 0)
+        win32api.PostMessage(handle, win32con.WM_KEYUP, key, 0)
 
     def toggle_button(self):
         if self.button_toggle.config('relief')[-1] == 'sunken':
             self.button_toggle.config(relief="raised", image=self.play_icon)
+            self.__script.stop_macro()
         else:
             self.button_toggle.config(relief="sunken", image=self.stop_icon)
-            self.key_press(win32con.VK_F5, 1.0)
-
-class MultiColumnListbox(object):
-    """use a ttk.TreeView as a multicolumn ListBox"""
-    def __init__(self, master):
-        self.tree = None
-        self.master = master
-        self.header = ['Name', 'PID']
-        self._setup_widgets()
-        self._build_tree()
-
-    def _setup_widgets(self):
-        s = """\click on header to sort by that column to change width of column drag boundary"""
-        msg = ttk.Label(wraplength="4i", justify="left", anchor="n", padding=(10, 2, 10, 6), text=s)
-        msg.pack(fill='x')
-        container = ttk.Frame()
-        container.pack(fill='both', expand=True)
-        # create a treeview with dual scrollbars
-        self.tree = ttk.Treeview(self.master, columns=self.header, show="headings")
-        vsb = ttk.Scrollbar(orient="vertical", command=self.tree.yview)
-        hsb = ttk.Scrollbar(orient="horizontal", command=self.tree.xview)
-        self.tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
-        self.tree.grid(column=0, row=0, sticky='nsew', in_=container)
-        vsb.grid(column=1, row=0, sticky='ns', in_=container)
-        hsb.grid(column=0, row=1, sticky='ew', in_=container)
-        container.grid_columnconfigure(0, weight=1)
-        container.grid_rowconfigure(0, weight=1)
-
-    def _build_tree(self):
-        for col in self.header:
-            self.tree.heading(col, text=col.title(), command=lambda c=col: self.sortby(self.tree, c, 0))
-            # adjust the column's width to the header string
-            self.tree.column(col, width=font.Font().measure(col.title()))
-
-        for proc in psutil.process_iter():
-            try:
-                pinfo = proc.as_dict(attrs=['pid', 'name'])
-            except psutil.NoSuchProcess:
-                pass
-            else:
-                self.tree.insert('', 'end', values=(pinfo['name'], pinfo['pid']))
-
-        # for item in car_list:
-        #     self.tree.insert('', 'end', values=item)
-        #     # adjust column's width if necessary to fit each value
-        #     for ix, val in enumerate(item):
-        #         col_w = font.Font().measure(val)
-        #         if self.tree.column(self.header[ix],width=None)<col_w:
-        #             self.tree.column(self.header[ix], width=col_w)
-
-    def sortby(self, tree, col, descending):
-        """sort tree contents when a column header is clicked on"""
-        # grab values to sort
-        data = [(tree.set(child, col), child) \
-                for child in tree.get_children('')]
-        # if the data to be sorted is numeric change to float
-        # data =  change_numeric(data)
-        # now sort the data in place
-        data.sort(reverse=descending)
-        for ix, item in enumerate(data):
-            tree.move(item[1], '', ix)
-        # switch the heading so it will sort in the opposite direction
-        tree.heading(col, command=lambda col=col: self.sortby(tree, col, int(not descending)))
-
-
+            # self.key_press(win32con.VK_F5, 1.0)
+            handle = int(self.__window_manager.get_handle())
+            self.__script.press_shortcut(handle, 0)
 
 root = Tk()
 root.resizable(width=False, height=False)

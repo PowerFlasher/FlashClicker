@@ -1,0 +1,17 @@
+{
+    "title": "Example Script",
+    "macros": [
+        {
+            "title": "Press F5 2x",
+            "shortcut": "F1",
+            "script": [
+                {
+                    "key": "F5",
+                    "time_press": 1000,
+                    "wait": 3000,
+                    "times": 2
+                }
+            ]
+        }
+    ]
+}

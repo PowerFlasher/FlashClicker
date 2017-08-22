@@ -7,6 +7,18 @@ class WindowManager:
     def __init__ (self, hwnd = None):
         self._handle = hwnd
 
+    def set_handle(self, hwnd):
+        self._handle = hwnd
+
+    def get_handle(self):
+        return self._handle
+
+    def set_foreground(self):
+        """put the window in the foreground"""
+        if self._handle is not None:
+            win32gui.ShowWindow(self._handle, True)
+            win32gui.SetForegroundWindow(self._handle)
+
     def isRealWindow(self, hWnd):
         '''Return True iff given handler corespond to a real visible window on the desktop.'''
         if not win32gui.IsWindowVisible(hWnd):
