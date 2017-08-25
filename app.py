@@ -125,8 +125,9 @@ class MainActivity(Frame):
         button_target_program.pack()
 
     def set_handle(self, selection, window):
-        if selection['values'] is not '':
+        if selection['values'] != '':
             self.__window_manager.set_handle(int(selection['values'][1]))
+            self.__script.set_handle(int(selection['values'][1]))
             self.target_name.set((selection['values'][0][:23] + '..') if len(selection['values'][0]) > 23 else selection['values'][0])
             self.target_pid.set(selection['values'][1])
             window.destroy()
