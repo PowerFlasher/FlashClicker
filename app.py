@@ -4,7 +4,7 @@ import win32gui
 import win32process
 import time
 import threading
-import psutil
+import os
 from tkinter import *
 from tkinter import ttk
 from tkinter import font
@@ -76,6 +76,7 @@ class MainActivity(Frame):
         button_info.icon = icon
         # ProgressBar
         progress_bar = ttk.Progressbar(bottom_frame, orient="horizontal", length=150, mode="determinate")
+        self.__script.progress_bar = progress_bar
         # GridLayout
         button_open.grid(row=0, column=0)
         button_target_program.grid(row=0, column=1)
@@ -85,7 +86,7 @@ class MainActivity(Frame):
         progress_bar.pack()
 
     def open_file(self):
-        self.__script.load_json(filedialog.askopenfilename())
+        self.__script.load_json(filedialog.askopenfilename(initialdir=os.getcwd(), title="Select macros file", filetypes=[("JSON files","*.json")]))
         self.data_title.set(self.__script.title)
         self.data_shortcuts.set(', '.join(str(x[0]) for x in self.__script.shortcuts))
 
