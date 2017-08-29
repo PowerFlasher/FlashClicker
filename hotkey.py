@@ -2,7 +2,8 @@ import ctypes
 import win32con
   
 
-keys = {getattr(win32con, v) : v for v in dir(win32con) if v.startswith("VK_F")}
+keys = {getattr(win32con, v) : v for v in dir(win32con) if v.startswith("VK_")}
+values = {v : getattr(win32con, v) for v in dir(win32con) if v.startswith("VK_")}
 # keys = {
 #     "shift": win32con.MOD_SHIFT
 #     , "control": win32con.MOD_CONTROL

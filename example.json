@@ -2,14 +2,56 @@
     "title": "Example Script",
     "macros": [
         {
-            "title": "Press F5 2x",
-            "shortcut": "F1",
+            "title": "Press F5 2x and write TEST",
+            "shortcut": "VK_F1",
             "script": [
                 {
-                    "key": "F5",
+                    "key": "VK_F5",
+                    "action": "keyboard_control",
                     "time_press": 1000,
-                    "wait": 3000,
+                    "wait": 2000,
                     "times": 2
+                },
+                {
+                    "key": "T",
+                    "action": "keyboard_write",
+                    "time_press": 500,
+                    "wait": 1000,
+                    "times": 1
+                },
+                {
+                    "key": "E",
+                    "action": "keyboard_write",
+                    "time_press": 500,
+                    "wait": 1000,
+                    "times": 1
+                },
+                {
+                    "key": "S",
+                    "action": "keyboard_write",
+                    "time_press": 500,
+                    "wait": 1000,
+                    "times": 1
+                },
+                {
+                    "key": "T",
+                    "action": "keyboard_write",
+                    "time_press": 500,
+                    "wait": 1000,
+                    "times": 1
+                }
+            ]
+        },
+        {
+            "title": "Write The End",
+            "shortcut": "VK_F2",
+            "script": [
+                {
+                    "key": "Hi\nThe End",
+                    "action": "keyboard_write",
+                    "time_press": 1,
+                    "wait": 1000,
+                    "times": 1
                 }
             ]
         }

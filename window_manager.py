@@ -32,6 +32,9 @@ class WindowManager:
             if win32gui.GetWindowText(hWnd):
                 return True
         return False
+
+    def getChildWindow(self, hWnd):
+        return win32gui.GetWindow(hWnd, win32con.GW_CHILD)
   
     def getWindows(self):
         '''

@@ -16,7 +16,8 @@ class MainActivity(Frame):
 
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
-        # handle
+        # 
+        # self.initialdir = str(os.getcwd())
         self.__window_manager = WindowManager()
         self.__script = Script()
         self.sevenFont = font.Font(family="Helvetica", size=7)
@@ -76,7 +77,6 @@ class MainActivity(Frame):
         button_info.icon = icon
         # ProgressBar
         progress_bar = ttk.Progressbar(bottom_frame, orient="horizontal", length=150, mode="determinate")
-        self.__script.progress_bar = progress_bar
         # GridLayout
         button_open.grid(row=0, column=0)
         button_target_program.grid(row=0, column=1)
@@ -84,11 +84,12 @@ class MainActivity(Frame):
         self.button_toggle.grid(row=0, column=3)
         button_info.grid(row=0, column=4)
         progress_bar.pack()
+        self.__script.progress_bar = progress_bar
 
     def open_file(self):
-        self.__script.load_json(filedialog.askopenfilename(initialdir=os.getcwd(), title="Select macros file", filetypes=[("JSON files","*.json")]))
+        self.__script.load_json(filedialog.askopenfilename(title="Select macros file", filetypes=[("JSON files","*.json")]))
         self.data_title.set(self.__script.title)
-        self.data_shortcuts.set(', '.join(str(x[0]) for x in self.__script.shortcuts))
+        self.data_shortcuts.set(', '.join(str(x[0]).replace("VK_", "") for x in self.__script.shortcuts))
 
 
     def target_program(self):
@@ -97,28 +98,23 @@ class MainActivity(Frame):
         target_window.wm_title("Target Program")
         # listbox = MultiColumnListbox(target_window)
         windows = self.__window_manager.getWindows()
-        tree = ttk.Treeview(target_window, columns=("name","pid"), show="headings")
+        tree = ttk.Treeview(target_window, columns=("pid"))
         vsb = ttk.Scrollbar(target_window, orient="vertical", command=tree.yview)
         vsb.pack(side='right', fill='y')
         tree.configure(yscrollcommand=vsb.set)
         # tree["columns"] = ("pid")
         # tree.column("two", width=100)
-        tree.column("name", width=200)
-        tree.heading("name", text="Name", anchor=W)
+        tree.column("#0", width=200)
+        tree.heading("#0", text="Name", anchor=W)
         tree.column("pid", width=100)
         tree.heading("pid", text="PID", anchor=W)
         # tree.heading("two", text="column B")
         for window in windows:
-            tree.insert("", 'end', text=window[0], values=(window[1], window[0]))
+            tree.insert("", 'end', str(window[0]), text=window[1], values=(window[0]))
+            child = self.__window_manager.getChildWindow(window[0])
+            if child != 0:
+                tree.insert(str(window[0]), 'end', text=str(window[1]), values=(child))
 
-        # tree.insert("", 0, text="Line 1", values=("1A", "1b"))
-
-        # id2 = tree.insert("", 1, "dir2", text="Dir 2")
-        # tree.insert(id2, "end", "dir 2", text="sub dir 2", values=("2A", "2B"))
-
-        # ##alternatively:
-        # tree.insert("", 3, "dir3", text="Dir 3")
-        # tree.insert("dir3", 3, text=" sub dir 3", values=("3A", " 3B"))
         tree.pack(expand=True)
         self.target_icon = PhotoImage(file="icons/target.png")
         button_target_program = Button(target_window, compound=LEFT, text="Target Program", image=self.target_icon, command= lambda: self.set_handle(tree.item(tree.selection()), target_window))
@@ -127,20 +123,17 @@ class MainActivity(Frame):
 
     def set_handle(self, selection, window):
         if selection['values'] != '':
-            self.__window_manager.set_handle(int(selection['values'][1]))
-            self.__script.set_handle(int(selection['values'][1]))
-            self.target_name.set((selection['values'][0][:23] + '..') if len(selection['values'][0]) > 23 else selection['values'][0])
-            self.target_pid.set(selection['values'][1])
+            self.__window_manager.set_handle(int(selection['values'][0]))
+            self.__script.set_handle(int(selection['values'][0]))
+            self.target_name.set((selection['text'][:23] + '..') if len(selection['text']) > 23 else selection['text'])
+            self.target_pid.set(selection['values'][0])
             window.destroy()
+
 
     def show_program(self):
         self.__window_manager.set_foreground()
+        print(self.__script.progress_bar)
 
-    def key_press(self, key, time_press):
-        handle = self.__window_manager.get_handle()
-        win32api.PostMessage(handle, win32con.WM_KEYDOWN, key, 0)
-        time.sleep(time_press)
-        win32api.PostMessage(handle, win32con.WM_KEYUP, key, 0)
 
     def toggle_button(self):
         if self.button_toggle.config('relief')[-1] == 'sunken':
@@ -150,13 +143,15 @@ class MainActivity(Frame):
             self.button_toggle.config(relief="sunken", image=self.stop_icon)
             # self.key_press(win32con.VK_F5, 1.0)
             handle = int(self.__window_manager.get_handle())
-            self.__script.press_shortcut(handle, 0)
+            self.__script.press_shortcut(0)
 
-root = Tk()
-root.resizable(width=False, height=False)
-root.geometry('{}x{}'.format(250, 200))
-icon = PhotoImage(file="icons/flash.png")
-root.tk.call('wm', 'iconphoto', root._w, icon)
-root.title("FlashKeyMacro")
-main = MainActivity(root)
-root.mainloop()
+
+if __name__ == '__main__':
+    root = Tk()
+    root.resizable(width=False, height=False)
+    root.geometry('{}x{}'.format(250, 200))
+    icon = PhotoImage(file="icons/flash.png")
+    root.tk.call('wm', 'iconphoto', root._w, icon)
+    root.title("FlashKeys")
+    main = MainActivity(root)
+    root.mainloop()
