@@ -1,0 +1,40 @@
+{
+    "title": "Direct Input Script",
+    "macros": [
+        {
+            "title": "Press Q, W, E, R",
+            "shortcut": "VK_F2",
+            "times": 1,
+            "script": [
+                {
+                    "key": "DIK_Q",
+                    "action": "direct_input",
+                    "time_press": 500,
+                    "wait": 1000,
+                    "times": 1
+                },
+                {
+                    "key": "DIK_W",
+                    "action": "direct_input",
+                    "time_press": 500,
+                    "wait": 1000,
+                    "times": 1
+                },
+                {
+                    "key": "DIK_E",
+                    "action": "direct_input",
+                    "time_press": 500,
+                    "wait": 1000,
+                    "times": 1
+                },
+                {
+                    "key": "DIK_R",
+                    "action": "direct_input",
+                    "time_press": 500,
+                    "wait": 1000,
+                    "times": 1
+                }
+            ]
+        }
+    ]
+}

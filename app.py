@@ -17,7 +17,7 @@ class MainActivity(Frame):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
         # 
-        # self.initialdir = str(os.getcwd())
+        self.initialdir = str(os.getcwd())
         self.__window_manager = WindowManager()
         self.__script = Script()
         self.sevenFont = font.Font(family="Helvetica", size=7)
@@ -28,7 +28,7 @@ class MainActivity(Frame):
         s.configure('Green.TLabelframe.Label', foreground ='green')
         top_frame = Frame()
         top_frame.pack(side=TOP)
-        center_frame = Frame(width=150, height=150, background="#e6ffe6")
+        center_frame = Frame(width=150, height=166, background="#e6ffe6")
         # Target Program Label
         target_labelsFrame = ttk.Labelframe(center_frame, text='Target Program', labelanchor=N+S, width=150, height=50, style="Green.TLabelframe")
         ttk.Label(target_labelsFrame, text="Name:", font=self.sevenFont).grid(column=0, row=0, sticky='W')
@@ -49,6 +49,19 @@ class MainActivity(Frame):
         ttk.Label(data_labelsFrame, textvariable=self.data_shortcuts, font=self.sevenFont).grid(column=1, row=1, sticky='W')
         data_labelsFrame.pack(fill="both")
         # End Script data Label
+        # Info data Label
+        status_labelsFrame = ttk.Labelframe(center_frame, text='Status Info', labelanchor=N+S, width=150, height=50, style="Green.TLabelframe")
+        ttk.Label(status_labelsFrame, text="Macro:", font=self.sevenFont).grid(column=0, row=0, sticky='W')
+        self.macro_title = StringVar()
+        ttk.Label(status_labelsFrame, textvariable=self.macro_title, font=self.sevenFont).grid(column=1, row=0, sticky='W')
+        ttk.Label(status_labelsFrame, text="Key:", font=self.sevenFont).grid(column=0, row=1, sticky='W')
+        self.macro_key = StringVar()
+        ttk.Label(status_labelsFrame, textvariable=self.macro_key, font=self.sevenFont).grid(column=1, row=1, sticky='W')
+        ttk.Label(status_labelsFrame, text="Status:", font=self.sevenFont).grid(column=0, row=2, sticky='W')
+        self.status_text = StringVar()
+        ttk.Label(status_labelsFrame, textvariable=self.status_text, font=self.sevenFont).grid(column=1, row=2, sticky='W')
+        status_labelsFrame.pack(fill="both")
+        # End Info data Label
         center_frame.pack_propagate(False)
         center_frame.pack(side=TOP)
         bottom_frame = Frame()
@@ -66,11 +79,11 @@ class MainActivity(Frame):
         button_show_program = Button(top_frame, image=icon, command=self.show_program)
         button_show_program.icon = icon
         # text="Start/Stop"
-        self.play_icon = PhotoImage(file="icons/play.png")
-        self.stop_icon = PhotoImage(file="icons/stop.png")
-        self.button_toggle = Button(top_frame, image=self.play_icon, relief="raised", command=self.toggle_button)
-        self.button_toggle.play_icon = self.play_icon
-        self.button_toggle.stop_icon = self.play_icon
+        self.numeric_icon = PhotoImage(file="icons/numeric.png")
+        self.infinity_icon = PhotoImage(file="icons/infinity.png")
+        self.button_toggle = Button(top_frame, image=self.numeric_icon, relief="raised", command=self.toggle_button)
+        self.button_toggle.numeric_icon = self.numeric_icon
+        self.button_toggle.infinity_icon = self.infinity_icon
         # text="Info"
         icon = PhotoImage(file="icons/information-outline.png")
         button_info = Button(top_frame, image=icon)
@@ -85,9 +98,11 @@ class MainActivity(Frame):
         button_info.grid(row=0, column=4)
         progress_bar.pack()
         self.__script.progress_bar = progress_bar
+        self.__script.set_status_info(self.macro_title, self.macro_key, self.status_text)
+
 
     def open_file(self):
-        self.__script.load_json(filedialog.askopenfilename(title="Select macros file", filetypes=[("JSON files","*.json")]))
+        self.__script.load_json(filedialog.askopenfilename(initialdir=self.initialdir, title="Select macros file", filetypes=[("JSON files","*.json")]))
         self.data_title.set(self.__script.title)
         self.data_shortcuts.set(', '.join(str(x[0]).replace("VK_", "") for x in self.__script.shortcuts))
 
@@ -112,8 +127,9 @@ class MainActivity(Frame):
         for window in windows:
             tree.insert("", 'end', str(window[0]), text=window[1], values=(window[0]))
             child = self.__window_manager.getChildWindow(window[0])
-            if child != 0:
+            while child and child != 0:
                 tree.insert(str(window[0]), 'end', text=str(window[1]), values=(child))
+                child = self.__window_manager.getChildWindow(child)
 
         tree.pack(expand=True)
         self.target_icon = PhotoImage(file="icons/target.png")
@@ -132,24 +148,28 @@ class MainActivity(Frame):
 
     def show_program(self):
         self.__window_manager.set_foreground()
-        print(self.__script.progress_bar)
 
 
     def toggle_button(self):
-        if self.button_toggle.config('relief')[-1] == 'sunken':
-            self.button_toggle.config(relief="raised", image=self.play_icon)
-            self.__script.stop_macro()
+        if self.__script.infinity:
+            self.button_toggle.config(image=self.numeric_icon)
         else:
-            self.button_toggle.config(relief="sunken", image=self.stop_icon)
-            # self.key_press(win32con.VK_F5, 1.0)
-            handle = int(self.__window_manager.get_handle())
-            self.__script.press_shortcut(0)
+            self.button_toggle.config(image=self.infinity_icon)
+        self.__script.infinity = not self.__script.infinity
+        # if self.button_toggle.config('relief')[-1] == 'sunken':
+        #     self.button_toggle.config(relief="raised", image=self.numeric_icon)
+        #     self.__script.stop_macro()
+        # else:
+        #     self.button_toggle.config(relief="sunken", image=self.infinity_icon)
+        #     # self.key_press(win32con.VK_F5, 1.0)
+        #     handle = int(self.__window_manager.get_handle())
+        #     self.__script.press_shortcut(0)
 
 
 if __name__ == '__main__':
     root = Tk()
     root.resizable(width=False, height=False)
-    root.geometry('{}x{}'.format(250, 200))
+    root.geometry('{}x{}'.format(250, 220))
     icon = PhotoImage(file="icons/flash.png")
     root.tk.call('wm', 'iconphoto', root._w, icon)
     root.title("FlashKeys")

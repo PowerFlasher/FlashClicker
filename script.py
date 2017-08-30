@@ -7,7 +7,7 @@ import time
 import threading
 import ctypes
 from ctypes import wintypes, c_void_p, c_int, windll, CFUNCTYPE, POINTER
-from hotkey import Hotkey, keys, values
+from hotkey import Dirkey, keys, values, dik
 # from pynput import keyboard
 
 WH_KEYBOARD_LL = 13                                                                 
@@ -21,17 +21,22 @@ class Script(threading.Thread):
         self.data = None
         self.title = None
         self.shortcuts = []
-        self.thread = None
+        self.thread = threading.Thread()
+        self.dirkey = Dirkey()
         self.stop_event = None
-        # self.hks = []
+        self.current_shortkey = None
         #
         self.progress_bar = None
+        self.infinity = False
+        self.macro_title = None
+        self.macro_key = None
+        self.status_text = None
         # 
         self.daemon = True
         self.hooked  = None
         self.start()
         # print('Keys', keys)
-        print('Values', values)
+        # print('Values', values)
         # print(self.get_key_text(65))
         # print(self.get_text_key('VK_F1'))
         # print(self.get_text_key('A'))
@@ -42,9 +47,12 @@ class Script(threading.Thread):
 
 
     def get_text_key(self, text):
-        key = values.get(text)
-        if key == None and len(text) == 1:
-            key = ord(text)
+        if 'DIK' in text:
+            key = dik.get(text)
+        else:
+            key = values.get(text)
+            if key == None and len(text) == 1:
+                key = ord(text)
         return key
 
 
@@ -56,28 +64,24 @@ class Script(threading.Thread):
         return self.__hwnd
 
 
-    # def register_hotkey(self):
-    #     for idx, shortcut in enumerate(self.shortcuts):
-    #         self.hks.append(Hotkey(idx + 1, None, keys.get(shortcut[0])))
-    #         print(shortcut, keys.get(shortcut[0]), self.hks[-1].register(None))
-
-
-    # def unregister_hotkey(self):
-    #     for hk in self.hks:
-    #         hk.unregister(None)
+    def set_status_info(self, title, key, status):
+        self.macro_title = title
+        self.macro_key = key
+        self.status_text = status
 
 
     def load_json(self, file):
-        if file:
-            with open(file, 'r') as data_file:
-                self.data = json.load(data_file)
-                self.title = self.data['title']
-                for idx, macro in enumerate(self.data['macros']):
-                    self.shortcuts.append((macro['shortcut'], idx))
-                data_file.close()
-                # self.unregister_hotkey()
-                # self.register_hotkey()
-            # self.hooker()
+        try:
+            if file:
+                with open(file, 'r') as data_file:
+                    self.shortcuts = []
+                    self.data = json.load(data_file)
+                    self.title = self.data['title']
+                    for idx, macro in enumerate(self.data['macros']):
+                        self.shortcuts.append((macro['shortcut'], idx))
+                    data_file.close()
+        except Exception: 
+            pass
 
 
     def installHookProc(self, pointer):                                           
@@ -108,10 +112,14 @@ class Script(threading.Thread):
     def hookProc(self, nCode, wParam, lParam):                                              
         if wParam is not WM_KEYDOWN:
             return ctypes.windll.user32.CallNextHookEx(self.hooked, nCode, wParam, lParam)
-
         for shortcut in self.shortcuts:
             if keys.get(lParam[0]) and shortcut[0] in keys.get(lParam[0]):
-                self.press_shortcut(shortcut[1])
+                if not self.thread.is_alive():
+                    self.current_shortkey = shortcut[0]
+                    self.press_shortcut(shortcut[1])
+                elif shortcut[0] == self.current_shortkey:
+                    self.current_shortkey = None
+                    self.stop_macro()
 
         return ctypes.windll.user32.CallNextHookEx(self.hooked, nCode, wParam, lParam)
 
@@ -139,6 +147,11 @@ class Script(threading.Thread):
             win32api.PostMessage(self.__hwnd, win32con.WM_KEYDOWN, key, 0)
             time.sleep(time_press / 1000.0)
             win32api.PostMessage(self.__hwnd, win32con.WM_KEYUP, key, 0)
+        elif action == 'direct_input':
+            key = self.get_text_key(key)
+            self.dirkey.press_key(key)
+            time.sleep(time_press / 1000.0)
+            self.dirkey.release_key(key)
         time.sleep(wait / 1000.0)
 
 
@@ -154,19 +167,40 @@ class Script(threading.Thread):
 
     def get_max_progress(self, idx):
         count = 0
-        for action in self.data['macros'][idx]['script']:
-            for i in range(action['times']):
-                count += 1
+        for c in range(self.data['macros'][idx]['times']):
+            for action in self.data['macros'][idx]['script']:
+                for i in range(action['times']):
+                    count += 1
         return count
 
 
     def run_macro(self, idx, stop_event):
-        self.progress_bar["maximum"] = self.get_max_progress(idx)
-        self.progress_bar["value"] = 0
-        for action in self.data['macros'][idx]['script']:
-            if not stop_event.is_set():
-                for i in range(action['times']):
-                    if not stop_event.is_set():
-                        self.key_press(action['key'], action['time_press'], action['wait'], action['action'])
-                        self.progress_bar.update()
-                        self.progress_bar["value"] += 1
+        while True and not stop_event.is_set():
+            self.progress_bar["maximum"] = self.get_max_progress(idx)
+            self.progress_bar["value"] = 0
+            self.macro_title.set((self.data['macros'][idx]['title'][:23] + '..') if len(self.data['macros'][idx]['title']) > 23 else self.data['macros'][idx]['title'])
+            self.macro_key.set(self.current_shortkey.replace("VK_", ""))
+            self.status_text.set('RUN')
+            for count in range(self.data['macros'][idx]['times']):
+                if not stop_event.is_set():
+                    for action in self.data['macros'][idx]['script']:
+                        if not stop_event.is_set():
+                            for i in range(action['times']):
+                                if not stop_event.is_set():
+                                    self.key_press(action['key'], action['time_press'], action['wait'], action['action'])
+                                    self.progress_bar.update()
+                                    self.progress_bar["value"] += 1
+                                else:
+                                    self.status_text.set('STOPPED')
+                                    break
+                        else:
+                            self.status_text.set('STOPPED')
+                            break
+                else:
+                    self.status_text.set('STOPPED')
+                    break
+            if not stop_event.is_set() and not self.infinity:
+                self.status_text.set('FINISH')
+                break
+        else:
+            self.status_text.set('STOPPED')

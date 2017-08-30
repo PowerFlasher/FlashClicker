@@ -4,106 +4,139 @@ import win32con
 
 keys = {getattr(win32con, v) : v for v in dir(win32con) if v.startswith("VK_")}
 values = {v : getattr(win32con, v) for v in dir(win32con) if v.startswith("VK_")}
-# keys = {
-#     "shift": win32con.MOD_SHIFT
-#     , "control": win32con.MOD_CONTROL
-#     , "ctrl": win32con.MOD_CONTROL
-#     , "alt": win32con.MOD_ALT
-#     , "win": win32con.MOD_WIN
-#     , "up": win32con.VK_UP
-#     , "down": win32con.VK_DOWN
-#     , "left": win32con.VK_LEFT
-#     , "right": win32con.VK_RIGHT
-#     , "pgup": win32con.VK_PRIOR
-#     , "pgdown": win32con.VK_NEXT
-#     , "home": win32con.VK_HOME
-#     , "end": win32con.VK_END
-#     , "insert": win32con.VK_INSERT
-#     , "enter": win32con.VK_RETURN
-#     , "return": win32con.VK_RETURN
-#     , "tab": win32con.VK_TAB
-#     , "space": win32con.VK_SPACE
-#     , "backspace": win32con.VK_BACK
-#     , "delete": win32con.VK_DELETE
-#     , "del": win32con.VK_DELETE
-#     , "apps": win32con.VK_APPS
-#     , "popup": win32con.VK_APPS
-#     , "escape": win32con.VK_ESCAPE
-#     , "npmul": win32con.VK_MULTIPLY
-#     , "npadd": win32con.VK_ADD
-#     , "npsep": win32con.VK_SEPARATOR
-#     , "npsub": win32con.VK_SUBTRACT
-#     , "npdec": win32con.VK_DECIMAL
-#     , "npdiv": win32con.VK_DIVIDE
-#     , "np0": win32con.VK_NUMPAD0
-#     , "numpad0": win32con.VK_NUMPAD0
-#     , "np1": win32con.VK_NUMPAD1
-#     , "numpad1": win32con.VK_NUMPAD1
-#     , "np2": win32con.VK_NUMPAD2
-#     , "numpad2": win32con.VK_NUMPAD2
-#     , "np3": win32con.VK_NUMPAD3
-#     , "numpad3": win32con.VK_NUMPAD3
-#     , "np4": win32con.VK_NUMPAD4
-#     , "numpad4": win32con.VK_NUMPAD4
-#     , "np5": win32con.VK_NUMPAD5
-#     , "numpad5": win32con.VK_NUMPAD5
-#     , "np6": win32con.VK_NUMPAD6
-#     , "numpad6": win32con.VK_NUMPAD6
-#     , "np7": win32con.VK_NUMPAD7
-#     , "numpad7": win32con.VK_NUMPAD7
-#     , "np8": win32con.VK_NUMPAD8
-#     , "numpad8": win32con.VK_NUMPAD8
-#     , "np9": win32con.VK_NUMPAD9
-#     , "numpad9": win32con.VK_NUMPAD9
-#     , "F1": win32con.VK_F1
-#     , "F2": win32con.VK_F2
-#     , "F3": win32con.VK_F3
-#     , "F4": win32con.VK_F4
-#     , "F5": win32con.VK_F5
-#     , "F6": win32con.VK_F6
-#     , "F7": win32con.VK_F7
-#     , "F8": win32con.VK_F8
-#     , "F9": win32con.VK_F9
-#     , "F10": win32con.VK_F10
-#     , "F11": win32con.VK_F11
-#     , "F12": win32con.VK_F12
-#     , "F13": win32con.VK_F13
-#     , "F14": win32con.VK_F14
-#     , "F15": win32con.VK_F15
-#     , "F16": win32con.VK_F16
-#     , "F17": win32con.VK_F17
-#     , "F18": win32con.VK_F18
-#     , "F19": win32con.VK_F19
-#     , "F20": win32con.VK_F20
-#     , "F21": win32con.VK_F21
-#     , "F22": win32con.VK_F22
-#     , "F23": win32con.VK_F23
-#     , "F24": win32con.VK_F24
-# }
+dik = {
+    'DIK_ESCAPE'          :0x01,
+    'DIK_1'               :0x02,
+    'DIK_2'               :0x03,
+    'DIK_3'               :0x04,
+    'DIK_4'               :0x05,
+    'DIK_5'               :0x06,
+    'DIK_6'               :0x07,
+    'DIK_7'               :0x08,
+    'DIK_8'               :0x09,
+    'DIK_9'               :0x0A,
+    'DIK_0'               :0x0B,
+    'DIK_MINUS'           :0x0C,    #/* - on main keyboard */
+    'DIK_EQUALS'          :0x0D,
+    'DIK_BACK'            :0x0E,    #/* backspace */
+    'DIK_TAB'             :0x0F,
+    'DIK_Q'               :0x10,
+    'DIK_W'               :0x11,
+    'DIK_E'               :0x12,
+    'DIK_R'               :0x13,
+    'DIK_T'               :0x14,
+    'DIK_Y'               :0x15,
+    'DIK_U'               :0x16,
+    'DIK_I'               :0x17,
+    'DIK_O'               :0x18,
+    'DIK_P'               :0x19,
+    'DIK_LBRACKET'        :0x1A,
+    'DIK_RBRACKET'        :0x1B,
+    'DIK_RETURN'          :0x1C,    #/* Enter on main keyboard */
+    'DIK_LCONTROL'        :0x1D,
+    'DIK_A'               :0x1E,
+    'DIK_S'               :0x1F,
+    'DIK_D'               :0x20,
+    'DIK_F'               :0x21,
+    'DIK_G'               :0x22,
+    'DIK_H'               :0x23,
+    'DIK_J'               :0x24,
+    'DIK_K'               :0x25,
+    'DIK_L'               :0x26,
+    'DIK_SEMICOLON'       :0x27,
+    'DIK_APOSTROPHE'      :0x28,
+    'DIK_GRAVE'           :0x29,    #/* accent grave */
+    'DIK_LSHIFT'          :0x2A,
+    'DIK_BACKSLASH'       :0x2B,
+    'DIK_Z'               :0x2C,
+    'DIK_X'               :0x2D,
+    'DIK_C'               :0x2E,
+    'DIK_V'               :0x2F,
+    'DIK_B'               :0x30,
+    'DIK_N'               :0x31,
+    'DIK_M'               :0x32,
+    'DIK_COMMA'           :0x33,
+    'DIK_PERIOD'          :0x34,    #/* . on main keyboard */
+    'DIK_SLASH'           :0x35,    #/* / on main keyboard */
+    'DIK_RSHIFT'          :0x36,
+    'DIK_MULTIPLY'        :0x37,    #/* * on numeric keypad */
+    'DIK_LMENU'           :0x38,    #/* left Alt */
+    'DIK_SPACE'           :0x39,
+    'DIK_CAPITAL'         :0x3A,
+    'DIK_F1'              :0x3B,
+    'DIK_F2'              :0x3C,
+    'DIK_F3'              :0x3D,
+    'DIK_F4'              :0x3E,
+    'DIK_F5'              :0x3F,
+    'DIK_F6'              :0x40,
+    'DIK_F7'              :0x41,
+    'DIK_F8'              :0x42,
+    'DIK_F9'              :0x43,
+    'DIK_F10'             :0x44,
+    'DIK_NUMLOCK'         :0x45,
+    'DIK_SCROLL'          :0x46,    #/* Scroll Lock */
+    'DIK_NUMPAD7'         :0x47,
+    'DIK_NUMPAD8'         :0x48,
+    'DIK_NUMPAD9'         :0x49,
+    'DIK_SUBTRACT'        :0x4A,    #/* - on numeric keypad */
+    'DIK_NUMPAD4'         :0x4B,
+    'DIK_NUMPAD5'         :0x4C,
+    'DIK_NUMPAD6'         :0x4D,
+    'DIK_ADD'             :0x4E,    #/* + on numeric keypad */
+    'DIK_NUMPAD1'         :0x4F,
+    'DIK_NUMPAD2'         :0x50,
+    'DIK_NUMPAD3'         :0x51,
+    'DIK_NUMPAD0'         :0x52,
+    'DIK_DECIMAL'         :0x53,    #/* . on numeric keypad */
+    'DIK_F11'             :0x57,
+    'DIK_F12'             :0x58,
+    'RUN_W'               :0x2A,
+    'RUN_S'               :0x2A,
+    'RUN_A'               :0x2A,
+    'RUN_D'               :0x2A
+}
+PUL = ctypes.POINTER(ctypes.c_ulong)
+class KeyBdInput(ctypes.Structure):
+    _fields_ = [("wVk", ctypes.c_ushort),
+                ("wScan", ctypes.c_ushort),
+                ("dwFlags", ctypes.c_ulong),
+                ("time", ctypes.c_ulong),
+                ("dwExtraInfo", PUL)]
+
+class HardwareInput(ctypes.Structure):
+    _fields_ = [("uMsg", ctypes.c_ulong),
+                ("wParamL", ctypes.c_short),
+                ("wParamH", ctypes.c_ushort)]
+
+class MouseInput(ctypes.Structure):
+    _fields_ = [("dx", ctypes.c_long),
+                ("dy", ctypes.c_long),
+                ("mouseData", ctypes.c_ulong),
+                ("dwFlags", ctypes.c_ulong),
+                ("time",ctypes.c_ulong),
+                ("dwExtraInfo", PUL)]
+
+class Input_I(ctypes.Union):
+    _fields_ = [("ki", KeyBdInput),
+                 ("mi", MouseInput),
+                 ("hi", HardwareInput)]
+
+class Input(ctypes.Structure):
+    _fields_ = [("type", ctypes.c_ulong),
+                ("ii", Input_I)]
   
-class Hotkey(object):
+class Dirkey:   
   
-    def __init__(self, keyId, modifiers, virtualkeys):
-  
-        self.keyId = keyId 
-        self.modifiers = modifiers
-        self.virtualkeys = virtualkeys
-  
-    def register(self, hwnd):
-        """
-        Registers the hotkeys into windows
-        Returns true on success
-        Returns false on error
-        """
-  
-        if ctypes.windll.user32.RegisterHotKey(hwnd, self.keyId, self.modifiers, self.virtualkeys):
-            return True
-        else:
-            return False
-  
-    def unregister(self, hwnd):
-        """
-        Unregisters the hotkeys that are created on initialization
-        """
-  
-        ctypes.windll.user32.UnregisterHotKey(hwnd, self.keyId)
+    def press_key(self, hexKeyCode):
+        extra = ctypes.c_ulong(0)
+        ii_ = Input_I()
+        ii_.ki = KeyBdInput( 0, hexKeyCode, 0x0008, 0, ctypes.pointer(extra) )
+        x = Input( ctypes.c_ulong(1), ii_ )
+        ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+    def release_key(self, hexKeyCode):
+        extra = ctypes.c_ulong(0)
+        ii_ = Input_I()
+        ii_.ki = KeyBdInput( 0, hexKeyCode, 0x0008 | 0x0002, 0, ctypes.pointer(extra) )
+        x = Input( ctypes.c_ulong(1), ii_ )
+        ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
