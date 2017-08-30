@@ -31,7 +31,7 @@ class Script(threading.Thread):
         self.hooked  = None
         self.start()
         # print('Keys', keys)
-        # print('Values', values)
+        print('Values', values)
         # print(self.get_key_text(65))
         # print(self.get_text_key('VK_F1'))
         # print(self.get_text_key('A'))
