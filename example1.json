@@ -8,28 +8,28 @@
             "script": [
                 {
                     "key": "DIK_Q",
-                    "action": "direct_input",
+                    "action": "direct_key",
                     "time_press": 500,
                     "wait": 1000,
                     "times": 1
                 },
                 {
                     "key": "DIK_W",
-                    "action": "direct_input",
+                    "action": "direct_key",
                     "time_press": 500,
                     "wait": 1000,
                     "times": 1
                 },
                 {
                     "key": "DIK_E",
-                    "action": "direct_input",
+                    "action": "direct_key",
                     "time_press": 500,
                     "wait": 1000,
                     "times": 1
                 },
                 {
                     "key": "DIK_R",
-                    "action": "direct_input",
+                    "action": "direct_key",
                     "time_press": 500,
                     "wait": 1000,
                     "times": 1

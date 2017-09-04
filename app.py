@@ -11,6 +11,7 @@ from tkinter import font
 from tkinter import filedialog
 from window_manager import WindowManager
 from script import Script
+from hotkey import values, dik, mouse_buttons_values
 
 class MainActivity(Frame):
 
@@ -85,9 +86,9 @@ class MainActivity(Frame):
         self.button_toggle.numeric_icon = self.numeric_icon
         self.button_toggle.infinity_icon = self.infinity_icon
         # text="Info"
-        icon = PhotoImage(file="icons/information-outline.png")
-        button_info = Button(top_frame, image=icon)
-        button_info.icon = icon
+        self.help_icon = PhotoImage(file="icons/information-outline.png")
+        button_info = Button(top_frame, image=self.help_icon, command=self.help)
+        button_info.icon = self.help_icon
         # ProgressBar
         progress_bar = ttk.Progressbar(bottom_frame, orient="horizontal", length=150, mode="determinate")
         # GridLayout
@@ -136,6 +137,26 @@ class MainActivity(Frame):
         button_target_program = Button(target_window, compound=LEFT, text="Target Program", image=self.target_icon, command= lambda: self.set_handle(tree.item(tree.selection()), target_window))
         button_target_program.icon = self.target_icon
         button_target_program.pack()
+
+    def help(self):
+        help_window = Toplevel(self)
+        help_window.tk.call('wm', 'iconphoto', help_window._w, self.help_icon)
+        help_window.wm_title("Help Keys ID")
+        tree = ttk.Treeview(help_window, columns=("value"))
+        vsb = ttk.Scrollbar(help_window, orient="vertical", command=tree.yview)
+        vsb.pack(side='right', fill='y')
+        tree.configure(yscrollcommand=vsb.set)
+        tree.column("#0", width=200)
+        tree.heading("#0", text="Key", anchor=W)
+        tree.column("value", width=100)
+        tree.heading("value", text="Value", anchor=W)
+        categorys = [('Virtual Keys', values), ('Direct Keys', dik), ('Mouse X Buttons', mouse_buttons_values)];
+        for category in categorys:
+            tree.insert("", 'end', str(category[0]), text=category[0], values=(category[0]))
+            for key in category[1]:
+                tree.insert(str(category[0]), 'end', text=str(key), values=(str(category[1][key])))
+
+        tree.pack(expand=True)
 
     def set_handle(self, selection, window):
         if selection['values'] != '':

@@ -89,12 +89,13 @@ dik = {
     'DIK_NUMPAD0'         :0x52,
     'DIK_DECIMAL'         :0x53,    #/* . on numeric keypad */
     'DIK_F11'             :0x57,
-    'DIK_F12'             :0x58,
-    'RUN_W'               :0x2A,
-    'RUN_S'               :0x2A,
-    'RUN_A'               :0x2A,
-    'RUN_D'               :0x2A
+    'DIK_F12'             :0x58
 }
+mouse_buttons_keys = {  0x10000:    'MK_XBUTTON1',
+                        0x20000:    'MK_XBUTTON2'}
+mouse_buttons_values = {'MK_XBUTTON1':      0x10000,
+                        'MK_XBUTTON2':      0x20000}
+
 PUL = ctypes.POINTER(ctypes.c_ulong)
 class KeyBdInput(ctypes.Structure):
     _fields_ = [("wVk", ctypes.c_ushort),

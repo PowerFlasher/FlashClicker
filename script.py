@@ -7,12 +7,39 @@ import time
 import threading
 import ctypes
 from ctypes import wintypes, c_void_p, c_int, windll, CFUNCTYPE, POINTER
-from hotkey import Dirkey, keys, values, dik
+from hotkey import Dirkey, keys, values, dik, MouseInput, mouse_buttons_keys, mouse_buttons_values
 # from pynput import keyboard
 
-WH_KEYBOARD_LL = 13                                                                 
-WM_KEYDOWN = 0x0100
-CTRL_CODE = 162
+WH_KEYBOARD_LL = win32con.WH_KEYBOARD_LL     
+WH_MOUSE_LL = win32con.WH_MOUSE_LL                                                            
+WM_KEYDOWN = win32con.WM_KEYDOWN
+HC_ACTION = win32con.HC_ACTION
+
+WM_QUIT        = 0x0012
+WM_MOUSEMOVE   = 0x0200
+WM_LBUTTONDOWN = 0x0201
+WM_LBUTTONUP   = 0x0202
+WM_RBUTTONDOWN = 0x0204
+WM_RBUTTONUP   = 0x0205
+WM_MBUTTONDOWN = 0x0207
+WM_MBUTTONUP   = 0x0208
+WM_MOUSEWHEEL  = 0x020A
+WM_MOUSEHWHEEL = 0x020E
+WM_XBUTTONDOWN = 0x020B
+WM_XBUTTONUP = 0x020C
+
+MSG_TEXT = {WM_MOUSEMOVE:   'WM_MOUSEMOVE',
+            WM_LBUTTONDOWN: 'WM_LBUTTONDOWN',
+            WM_LBUTTONUP:   'WM_LBUTTONUP',
+            WM_RBUTTONDOWN: 'WM_RBUTTONDOWN',
+            WM_RBUTTONUP:   'WM_RBUTTONUP',
+            WM_MBUTTONDOWN: 'WM_MBUTTONDOWN',
+            WM_MBUTTONUP:   'WM_MBUTTONUP',
+            WM_MOUSEWHEEL:  'WM_MOUSEWHEEL',
+            WM_MOUSEHWHEEL: 'WM_MOUSEHWHEEL',
+            WM_XBUTTONDOWN: 'WM_XBUTTONDOWN',
+            WM_XBUTTONUP: 'WM_XBUTTONUP'}
+
 
 class Script(threading.Thread):
     def __init__ (self):
@@ -33,7 +60,7 @@ class Script(threading.Thread):
         self.status_text = None
         # 
         self.daemon = True
-        self.hooked  = None
+        self.hooked = [None, None]
         self.start()
         # print('Keys', keys)
         # print('Values', values)
@@ -49,6 +76,8 @@ class Script(threading.Thread):
     def get_text_key(self, text):
         if 'DIK' in text:
             key = dik.get(text)
+        if 'MK' in text:
+            key = mouse_buttons_values.get(text)
         else:
             key = values.get(text)
             if key == None and len(text) == 1:
@@ -78,42 +107,69 @@ class Script(threading.Thread):
                     self.data = json.load(data_file)
                     self.title = self.data['title']
                     for idx, macro in enumerate(self.data['macros']):
-                        self.shortcuts.append((macro['shortcut'], idx))
+                        self.shortcuts.append((str(macro['shortcut']), idx))
                     data_file.close()
         except Exception: 
             pass
 
 
-    def installHookProc(self, pointer):                                           
-        self.hooked = ctypes.windll.user32.SetWindowsHookExA( 
+    def installHookProc(self, key_pointer, mouse_pointer):                                           
+        self.hooked[0] = ctypes.windll.user32.SetWindowsHookExA( 
                         WH_KEYBOARD_LL, 
-                        pointer, 
+                        key_pointer, 
                         windll.kernel32.GetModuleHandleW(None), 
                         0
         )
-
-        if not self.hooked:
+        self.hooked[1] = ctypes.windll.user32.SetWindowsHookExA( 
+                        WH_MOUSE_LL, 
+                        mouse_pointer, 
+                        windll.kernel32.GetModuleHandleW(None), 
+                        0
+        )
+        if not self.hooked[0] and not self.hooked[1]:
             return False
         return True
 
 
     def uninstallHookProc(self):                                                  
-        if self.hooked is None:
+        if self.hooked[0] is None:
             return
-        ctypes.windll.user32.UnhookWindowsHookEx(self.hooked)
-        self.hooked = None
+        ctypes.windll.user32.UnhookWindowsHookEx(self.hooked[0])
+        self.hooked[0] = None
+        if self.hooked[1] is None:
+            return
+        ctypes.windll.user32.UnhookWindowsHookEx(self.hooked[1])
+        self.hooked[1] = None
 
 
     def getFPTR(self, fn):                                                                  
         CMPFUNC = CFUNCTYPE(c_int, c_int, c_int, POINTER(c_void_p))
         return CMPFUNC(fn)
 
+    def mouse_hook_proc(self, nCode, wParam, lParam):
+        if nCode == HC_ACTION:
+            msg = ctypes.cast(lParam, POINTER(MouseInput))[0]
+            msgid = MSG_TEXT.get(wParam, str(wParam))
+            # msg = ((msg.dx, msg.dy),
+            #     msg.mouseData, msg.dwFlags,
+            #     msg.time, msg.dwExtraInfo)
+            # print('{:15s}: {}'.format(msgid, msg))
+            for shortcut in self.shortcuts:
+                if mouse_buttons_keys.get(msg.mouseData) and shortcut[0] == mouse_buttons_keys.get(msg.mouseData) and 'DOWN' in msgid:
+                    if not self.thread.is_alive():
+                        self.current_shortkey = shortcut[0]
+                        self.press_shortcut(shortcut[1])
+                    elif shortcut[0] == self.current_shortkey:
+                        self.current_shortkey = None
+                        self.stop_macro()
 
-    def hookProc(self, nCode, wParam, lParam):                                              
+        return ctypes.windll.user32.CallNextHookEx(self.hooked[1], nCode, wParam, lParam)
+
+    def key_hook_proc(self, nCode, wParam, lParam):
         if wParam is not WM_KEYDOWN:
-            return ctypes.windll.user32.CallNextHookEx(self.hooked, nCode, wParam, lParam)
+            return ctypes.windll.user32.CallNextHookEx(self.hooked[0], nCode, wParam, lParam)
         for shortcut in self.shortcuts:
-            if keys.get(lParam[0]) and shortcut[0] in keys.get(lParam[0]):
+            if self.get_key_text(lParam[0]) and shortcut[0] == self.get_key_text(lParam[0]):
                 if not self.thread.is_alive():
                     self.current_shortkey = shortcut[0]
                     self.press_shortcut(shortcut[1])
@@ -121,13 +177,14 @@ class Script(threading.Thread):
                     self.current_shortkey = None
                     self.stop_macro()
 
-        return ctypes.windll.user32.CallNextHookEx(self.hooked, nCode, wParam, lParam)
+        return ctypes.windll.user32.CallNextHookEx(self.hooked[0], nCode, wParam, lParam)
 
 
     def run(self):                                 
-        pointer = self.getFPTR(self.hookProc)
+        key_pointer = self.getFPTR(self.key_hook_proc)
+        mouse_pointer = self.getFPTR(self.mouse_hook_proc)
 
-        if self.installHookProc(pointer):
+        if self.installHookProc(key_pointer, mouse_pointer):
             print('Start listening')
             self.startKeyLog()
 
@@ -138,16 +195,16 @@ class Script(threading.Thread):
 
 
     def key_press(self, key, time_press, wait, action):
-        if action == 'keyboard_write':
+        if action == 'chat':
             for ch in key:
                 k = self.get_text_key(ch)
                 win32api.PostMessage(self.__hwnd, win32con.WM_CHAR, k, 0)
-        elif action == 'keyboard_control':
+        elif action == 'virtual_key':
             key = self.get_text_key(key)
             win32api.PostMessage(self.__hwnd, win32con.WM_KEYDOWN, key, 0)
             time.sleep(time_press / 1000.0)
             win32api.PostMessage(self.__hwnd, win32con.WM_KEYUP, key, 0)
-        elif action == 'direct_input':
+        elif action == 'direct_key':
             key = self.get_text_key(key)
             self.dirkey.press_key(key)
             time.sleep(time_press / 1000.0)

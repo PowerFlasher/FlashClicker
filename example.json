@@ -3,40 +3,33 @@
     "macros": [
         {
             "title": "Press F5 2x, control",
-            "shortcut": "VK_F1",
+            "shortcut": "MK_XBUTTON1",
             "times": 2,
             "script": [
                 {
-                    "key": "DIK_E",
-                    "action": "keyboard_control",
-                    "time_press": 1000,
-                    "wait": 2000,
-                    "times": 2
-                },
-                {
                     "key": "T",
-                    "action": "keyboard_control",
+                    "action": "virtual_key",
                     "time_press": 500,
                     "wait": 1000,
                     "times": 1
                 },
                 {
                     "key": "E",
-                    "action": "keyboard_control",
+                    "action": "virtual_key",
                     "time_press": 500,
                     "wait": 1000,
                     "times": 1
                 },
                 {
                     "key": "S",
-                    "action": "keyboard_control",
+                    "action": "virtual_key",
                     "time_press": 500,
                     "wait": 1000,
                     "times": 1
                 },
                 {
                     "key": "T",
-                    "action": "keyboard_control",
+                    "action": "virtual_key",
                     "time_press": 500,
                     "wait": 1000,
                     "times": 1
@@ -45,12 +38,12 @@
         },
         {
             "title": "Write The End",
-            "shortcut": "VK_F2",
+            "shortcut": "B",
             "times": 1,
             "script": [
                 {
                     "key": "\nHi\nThe End\n",
-                    "action": "keyboard_write",
+                    "action": "chat",
                     "time_press": 1,
                     "wait": 1000,
                     "times": 1
