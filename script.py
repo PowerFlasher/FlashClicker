@@ -76,7 +76,7 @@ class Script(threading.Thread):
     def get_text_key(self, text):
         if 'DIK' in text:
             key = dik.get(text)
-        if 'MK' in text:
+        elif 'MK' in text:
             key = mouse_buttons_values.get(text)
         else:
             key = values.get(text)
