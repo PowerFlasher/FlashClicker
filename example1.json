@@ -3,13 +3,13 @@
     "macros": [
         {
             "title": "Press Q, W, E, R",
-            "shortcut": "VK_F2",
+            "shortcut": "VK_F3",
             "times": 1,
             "script": [
                 {
                     "key": "DIK_Q",
                     "action": "direct_key",
-                    "time_press": 500,
+                    "time_press": 250,
                     "wait": 1000,
                     "times": 1
                 },

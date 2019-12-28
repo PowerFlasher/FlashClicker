@@ -98,6 +98,25 @@ class Script(threading.Thread):
         self.macro_key = key
         self.status_text = status
 
+    def get_statistics(self):
+        statistics = []
+        time_keys = 0
+        if self.data:
+            for idx, macro in enumerate(self.data['macros']):
+                for key in macro['script']:
+                    time_keys += (key['time_press'] + key['wait']) * key['times']
+                time_keys *= macro['times']
+                millis = int(time_keys)
+                seconds=(millis/1000)%60
+                seconds = round(seconds,2)
+                minutes=(millis/(1000*60))%60
+                minutes = round(minutes,2)
+                hours=(millis/(1000*60*60))%24
+                hours=round(hours,2)
+                days=(millis/(1000*60*60*24))
+                days=round(days,2)
+                statistics.append((macro['title'], millis, seconds, minutes, hours, days))
+        return statistics
 
     def load_json(self, file):
         try:
@@ -105,10 +124,10 @@ class Script(threading.Thread):
                 with open(file, 'r') as data_file:
                     self.shortcuts = []
                     self.data = json.load(data_file)
+                    data_file.close()
                     self.title = self.data['title']
                     for idx, macro in enumerate(self.data['macros']):
                         self.shortcuts.append((str(macro['shortcut']), idx))
-                    data_file.close()
         except Exception: 
             pass
 
@@ -219,7 +238,9 @@ class Script(threading.Thread):
 
 
     def stop_macro(self):
-        self.stop_event.set()
+        if self.stop_event:
+            self.stop_event.set()
+            self.progress_bar["value"] = 0
 
 
     def get_max_progress(self, idx):

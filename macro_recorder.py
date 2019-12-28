@@ -18,7 +18,7 @@ class KeyButton(object):
         return json.dumps(self.__dict__)
 
     def to_dict(self):
-        return {"key": str(self.keyID).upper(), "action": "virtual_key", "time_press": self.timeKeyRelease, "wait": 0, "times": 1}
+        return {"key": str(self.keyID).upper().replace('\'', ''), "action": "virtual_key", "time_press": self.timeKeyRelease, "wait": 0, "times": 1}
 
 def current_milli_time():
     return int(round(time.time() * 1000))
@@ -46,14 +46,14 @@ def on_release(key):
             "macros": [
                 {
                     "title": "Recorded Macro",
-                    "shortcut": "F8",
+                    "shortcut": "VK_F8",
                     "times": 1,
                     "script": data
                 }
             ]
         }
         with open('script_recorded_macro.json', 'w') as outfile:
-            json.dump(result, outfile)
+            json.dump(result, outfile, indent=4)
         # print(json.dumps(result, indent=4))
         print('Exiting...')
         return False
@@ -62,8 +62,11 @@ def on_release(key):
         keys[-1].setTimeKeyRelease(current_milli_time())
         print('Key {} released in time {}.'.format(key, keys[-1].timeKeyRelease))
 
-print('Starting listener...')
-with keyboard.Listener(
-    on_press = on_press,
-    on_release = on_release) as listener:
-    listener.join()
+def record():   
+    print('Starting listener...')
+    with keyboard.Listener(
+        on_press = on_press,
+        on_release = on_release) as listener:
+        listener.join()
+
+record()
