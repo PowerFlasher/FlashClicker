@@ -6,14 +6,24 @@ import win32process
 import time
 import threading
 import ctypes
+import os
 from ctypes import wintypes, c_void_p, c_int, windll, CFUNCTYPE, POINTER
 from hotkey import Dirkey, keys, values, dik, MouseInput, mouse_buttons_keys, mouse_buttons_values
+from macro_recorder import on_press, on_release
 # from pynput import keyboard
 
 WH_KEYBOARD_LL = win32con.WH_KEYBOARD_LL     
 WH_MOUSE_LL = win32con.WH_MOUSE_LL                                                            
+WM_KEYUP = win32con.WM_KEYUP
 WM_KEYDOWN = win32con.WM_KEYDOWN
 HC_ACTION = win32con.HC_ACTION
+WM_SYSKEYDOWN = win32con.WM_SYSKEYDOWN
+WM_SYSKEYUP = win32con.WM_SYSKEYUP
+
+#: The messages that correspond to a key press
+PRESS_MESSAGES = (WM_KEYDOWN, WM_SYSKEYDOWN)
+#: The messages that correspond to a key release
+RELEASE_MESSAGES = (WM_KEYUP, WM_SYSKEYUP)
 
 WM_QUIT        = 0x0012
 WM_MOUSEMOVE   = 0x0200
@@ -45,6 +55,7 @@ class Script(threading.Thread):
     def __init__ (self):
         threading.Thread.__init__(self)
         self.__hwnd = None
+        self.load_recorded_macro = None
         self.data = None
         self.title = None
         self.shortcuts = []
@@ -58,6 +69,7 @@ class Script(threading.Thread):
         self.macro_title = None
         self.macro_key = None
         self.status_text = None
+        self.record_macro = False
         # 
         self.daemon = True
         self.hooked = [None, None]
@@ -70,7 +82,7 @@ class Script(threading.Thread):
 
 
     def get_key_text(self, key):
-        return keys.get(key, chr(key))
+        return keys.get(hex(key), chr(key))
 
 
     def get_text_key(self, text):
@@ -119,17 +131,19 @@ class Script(threading.Thread):
         return statistics
 
     def load_json(self, file):
-        try:
-            if file:
+        if file:
+            try:
+                self.shortcuts = []
+                while not os.path.exists(os.path.join(os.getcwd(),file)):
+                    time.sleep(1)
                 with open(file, 'r') as data_file:
-                    self.shortcuts = []
                     self.data = json.load(data_file)
-                    data_file.close()
+                    # data_file.close()
                     self.title = self.data['title']
                     for idx, macro in enumerate(self.data['macros']):
                         self.shortcuts.append((str(macro['shortcut']), idx))
-        except Exception: 
-            pass
+            except FileNotFoundError():
+                print(e)
 
 
     def installHookProc(self, key_pointer, mouse_pointer):                                           
@@ -185,8 +199,15 @@ class Script(threading.Thread):
         return ctypes.windll.user32.CallNextHookEx(self.hooked[1], nCode, wParam, lParam)
 
     def key_hook_proc(self, nCode, wParam, lParam):
+        if self.record_macro:
+            if wParam in PRESS_MESSAGES:
+                on_press(chr(lParam[0]) if keys.get(hex(lParam[0])) is None else keys.get(hex(lParam[0])))
+            if wParam in RELEASE_MESSAGES:
+                on_release(chr(lParam[0]) if keys.get(hex(lParam[0])) is None else keys.get(hex(lParam[0])), self.load_recorded_macro)
         if wParam is not WM_KEYDOWN:
             return ctypes.windll.user32.CallNextHookEx(self.hooked[0], nCode, wParam, lParam)
+        if self.get_key_text(lParam[0]) and "VK_F10" == self.get_key_text(lParam[0]):
+            self.get_cursor_pos()
         for shortcut in self.shortcuts:
             if self.get_key_text(lParam[0]) and shortcut[0] == self.get_key_text(lParam[0]):
                 if not self.thread.is_alive():
@@ -230,6 +251,24 @@ class Script(threading.Thread):
             self.dirkey.release_key(key)
         time.sleep(wait / 1000.0)
 
+    def mouse_click(self, button, time_press, wait, point):
+        client_pos = (point['x'], point['y'])
+        # client_pos = win32gui.ScreenToClient(self.__hwnd, (point['x'], point['y']))1
+        lParam = win32api.MAKELONG(client_pos[0], client_pos[1])
+        if button == "left":
+            win32gui.PostMessage(self.__hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lParam)
+            time.sleep(time_press / 1000.0)
+            win32gui.PostMessage(self.__hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, lParam)
+        elif button == "right":
+            win32gui.PostMessage(self.__hwnd, win32con.WM_RBUTTONDOWN, win32con.MK_RBUTTON, lParam)
+            time.sleep(time_press / 1000.0)
+            win32gui.PostMessage(self.__hwnd, win32con.WM_RBUTTONUP, win32con.MK_RBUTTON, lParam)
+        time.sleep(wait / 1000.0)
+
+    def get_cursor_pos(self):
+        pos = win32gui.GetCursorPos()
+        print('x={}, y={}'.format(pos[0], pos[1]))
+
 
     def press_shortcut(self, idx):
         self.stop_event = threading.Event()
@@ -256,7 +295,7 @@ class Script(threading.Thread):
         while True and not stop_event.is_set():
             self.progress_bar["maximum"] = self.get_max_progress(idx)
             self.progress_bar["value"] = 0
-            self.macro_title.set((self.data['macros'][idx]['title'][:23] + '..') if len(self.data['macros'][idx]['title']) > 23 else self.data['macros'][idx]['title'])
+            self.macro_title.set((self.data['macros'][idx]['title'][:35] + '..') if len(self.data['macros'][idx]['title']) > 35 else self.data['macros'][idx]['title'])
             self.macro_key.set(self.current_shortkey.replace("VK_", ""))
             self.status_text.set('RUN')
             for count in range(self.data['macros'][idx]['times']):
@@ -265,7 +304,10 @@ class Script(threading.Thread):
                         if not stop_event.is_set():
                             for i in range(action['times']):
                                 if not stop_event.is_set():
-                                    self.key_press(action['key'], action['time_press'], action['wait'], action['action'])
+                                    if action['action'] == "mouse":
+                                        self.mouse_click(action['key'], action['time_press'], action['wait'], action['point'])
+                                    else:
+                                        self.key_press(action['key'], action['time_press'], action['wait'], action['action'])
                                     self.progress_bar.update()
                                     self.progress_bar["value"] += 1
                                 else:

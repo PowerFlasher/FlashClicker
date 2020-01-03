@@ -3,7 +3,7 @@
     "macros": [
         {
             "title": "Press Q, W, E, R",
-            "shortcut": "VK_F3",
+            "shortcut": "VK_F2",
             "times": 1,
             "script": [
                 {

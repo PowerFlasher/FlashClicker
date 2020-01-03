@@ -2,8 +2,9 @@ import ctypes
 import win32con
   
 
-keys = {getattr(win32con, v) : v for v in dir(win32con) if v.startswith("VK_")}
-values = {v : getattr(win32con, v) for v in dir(win32con) if v.startswith("VK_")}
+keys = {hex(getattr(win32con, v)) : v for v in dir(win32con) if v.startswith("VK_")}
+# print(keys)
+values = {v : hex(getattr(win32con, v)) for v in dir(win32con) if v.startswith("VK_")}
 dik = {
     'DIK_ESCAPE'          :0x01,
     'DIK_1'               :0x02,

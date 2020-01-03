@@ -5,6 +5,7 @@ import win32process
 import time
 import threading
 import os
+import sys
 from tkinter import *
 from tkinter import ttk
 from tkinter import font
@@ -13,6 +14,7 @@ from window_manager import WindowManager
 from script import Script
 from hotkey import values, dik, mouse_buttons_values
 from JsonEditor import JsonEditor
+from print_logger import PrintLogger
 # from macro_recorder import record as record_macro
 
 class MainActivity(Frame):
@@ -20,7 +22,7 @@ class MainActivity(Frame):
     def __init__(self, *args, **kwargs):
         Frame.__init__(self, *args, **kwargs)
         # 
-        self.initialdir = str(os.getcwd())
+        self.initialdir = str(os.path.join(os.getcwd(), 'scripts'))
         self.__window_manager = WindowManager()
         self.__script = Script()
         self.__script_path = ""
@@ -81,8 +83,8 @@ class MainActivity(Frame):
         self.edit_icon = PhotoImage(file="icons/edit.png")
         # text="Import File"
         open_icon = PhotoImage(file="icons/import-file.png")
-        button_import_file = Button(left_panel, compound=LEFT, text="Import File", anchor="w", image=open_icon, command=self.open_file)
-        button_import_file.icon = open_icon
+        self.button_import_file = Button(left_panel, compound=LEFT, text="Import File", anchor="w", image=open_icon, command=self.open_file)
+        self.button_import_file.icon = open_icon
         # text="Refresh File"
         self.reload_icon = PhotoImage(file="icons/refresh.png")
         self.button_reload = Button(left_panel, compound=LEFT, text=" ", anchor="w", image=self.reload_icon, command=self.reload)
@@ -90,12 +92,12 @@ class MainActivity(Frame):
         self.button_reload.icon = self.reload_icon
         # text="Target Program"
         self.target_icon = PhotoImage(file="icons/target.png")
-        button_target_program = Button(left_panel, compound=LEFT, text="Target Program", anchor="w", image=self.target_icon, command=self.target_program)
-        button_target_program.icon = self.target_icon
+        self.button_target_program = Button(left_panel, compound=LEFT, text="Target Program", anchor="w", image=self.target_icon, command=self.target_program)
+        self.button_target_program.icon = self.target_icon
         # text="Show Program"
         icon = PhotoImage(file="icons/window-search.png")
-        button_show_program = Button(left_panel, compound=LEFT, text="Show Window", anchor="w", image=icon, command=self.show_program)
-        button_show_program.icon = icon
+        self.button_show_program = Button(left_panel, compound=LEFT, text="Show Window", anchor="w", image=icon, command=self.show_program)
+        self.button_show_program.icon = icon
         # text="Finite/Infinite"
         self.numeric_icon = PhotoImage(file="icons/countdown-clock.png")
         self.infinity_icon = PhotoImage(file="icons/infinite.png")
@@ -104,45 +106,46 @@ class MainActivity(Frame):
         self.button_toggle.infinity_icon = self.infinity_icon
         # text="Help"
         self.help_icon = PhotoImage(file="icons/help.png")
-        button_help = Button(left_panel, compound=LEFT, text="Help", anchor="w", image=self.help_icon, command=self.help)
-        button_help.icon = self.help_icon
+        self.button_help = Button(left_panel, compound=LEFT, text="Help", anchor="w", image=self.help_icon, command=self.help)
+        self.button_help.icon = self.help_icon
         # text="Force Stop"
         self.force_stop_icon = PhotoImage(file="icons/force-stop.png")
         self.button_force_stop = Button(left_panel, compound=LEFT, text="Force Stop", anchor="w", image=self.force_stop_icon, command=self.stop_macro)
         self.button_force_stop.icon = self.force_stop_icon
         # text="Record Macro"
         self.record_macro_icon = PhotoImage(file="icons/record-macro.png")
-        button_record_macro = Button(left_panel, compound=LEFT, text="Record Macro", anchor="w", image=self.record_macro_icon, command=self.record_macro)
-        button_record_macro.icon = self.record_macro_icon
+        self.button_record_macro = Button(left_panel, compound=LEFT, text="Record Macro", anchor="w", image=self.record_macro_icon, command=self.record_macro)
+        self.button_record_macro.icon = self.record_macro_icon
         # text="Settings"
-        self.settings_icon = PhotoImage(file="icons/settings.png")
-        button_settings = Button(left_panel, compound=LEFT, text="Settings", anchor="w", image=self.settings_icon, command=self.help)
-        button_settings.icon = self.settings_icon
+        self.console_icon = PhotoImage(file="icons/console.png")
+        self.button_console = Button(left_panel, compound=LEFT, text="Console Logs", anchor="w", image=self.console_icon, command=self.open_console)
+        self.button_console.icon = self.console_icon
         # ProgressBar
         progress_bar = ttk.Progressbar(bottom_frame,length=400, orient="horizontal", mode="determinate")
         # GridLayout
-        button_import_file.grid(row=0, column=0, sticky="ew")
+        self.button_import_file.grid(row=0, column=0, sticky="ew")
         self.button_reload.grid(row=0, column=1, sticky="ew")
-        button_target_program.grid(row=1, column=0, columnspan=2, sticky="ew")
-        button_show_program.grid(row=2, column=0, columnspan=2, sticky="ew")
+        self.button_target_program.grid(row=1, column=0, columnspan=2, sticky="ew")
+        self.button_show_program.grid(row=2, column=0, columnspan=2, sticky="ew")
         self.button_toggle.grid(row=3, column=0, columnspan=2, sticky="ew")
         self.button_force_stop.grid(row=4, column=0, columnspan=2, sticky="ew")
-        button_record_macro.grid(row=5, column=0, columnspan=2, sticky="ew")
-        button_help.grid(row=6, column=0, columnspan=2, sticky="ew")
-        button_settings.grid(row=7, column=0, columnspan=2, sticky="ew")
+        self.button_record_macro.grid(row=5, column=0, columnspan=2, sticky="ew")
+        self.button_help.grid(row=6, column=0, columnspan=2, sticky="ew")
+        self.button_console.grid(row=7, column=0, columnspan=2, sticky="ew")
         progress_bar.pack()
         self.__script.progress_bar = progress_bar
         self.__script.set_status_info(self.macro_title, self.macro_key, self.status_text)
 
 
     def open_file(self):
-        self.__script_path = filedialog.askopenfilename(initialdir=self.initialdir, title="Select macros file", filetypes=[("JSON files","*.json")])
-        self.__script.load_json(self.__script_path)
-        self.data_title.set(self.__script.title)
-        self.data_shortcuts.set(', '.join(str(x[0]).replace("VK_", "") for x in self.__script.shortcuts))
-        self.button_reload.config(state="normal")
-        self.button_edit_file.config(state="normal")
-        self.button_total_time.config(state="normal")
+        self.__script_path = filedialog.askopenfilename(initialdir=self.initialdir, title="Select Script File", filetypes=[("JSON files","*.json")])
+        if self.__script_path:
+            self.__script.load_json(self.__script_path)
+            self.data_title.set(self.__script.title)
+            self.data_shortcuts.set(', '.join(str(x[0]).replace("VK_", "") for x in self.__script.shortcuts))
+            self.button_reload.config(state="normal")
+            self.button_edit_file.config(state="normal")
+            self.button_total_time.config(state="normal")
 
     def reload(self):
         if self.__script_path:
@@ -230,25 +233,54 @@ class MainActivity(Frame):
         vsb = ttk.Scrollbar(help_window, orient="vertical", command=tree.yview)
         vsb.pack(side='right', fill='y')
         tree.configure(yscrollcommand=vsb.set)
-        tree.column("#0", width=200)
+        tree.column("#0", width=150)
         tree.heading("#0", text="Key", anchor=W)
-        tree.column("value", width=100)
+        tree.column("value", width=450)
         tree.heading("value", text="Value", anchor=W)
-        categorys = [('Virtual Keys', values), ('Direct Keys', dik), ('Mouse X Buttons', mouse_buttons_values)];
-        for category in categorys:
-            tree.insert("", 'end', str(category[0]), text=category[0], values=(category[0]))
+        tree.insert("", 'end', "GCP", text="Get Cursor Position", values="Use\ the\ F10\ key\ to\ record\ the\ cursor\ coordinate\ (print\ is\ in\ the\ Console\ Logs)")
+        tree.insert("", 'end', "IF", text="Import File", values="Import\ the\ correct\ json\ file\ with\ the\ macro")
+        tree.insert("", 'end', "RB", text="Refresh Button", values="If\ you\ make\ a\ change\ to\ the\ file,\ just\ reload\ the\ file")
+        tree.insert("", 'end', "TP", text="Target Program", values="Target\ the\ program\ to\ which\ the\ macro\ will\ be\ sent")
+        tree.insert("", 'end', "SW", text="Show Window", values="Show\ the\ currently\ targeted\ window")
+        tree.insert("", 'end', "FI", text="Finite/Infinite", values="Mode\ between\ final\ and\ infinite\ macro\ execution")
+        tree.insert("", 'end', "FS", text="Force Stop", values="Stop\ the\ currently\ running\ macro")
+        tree.insert("", 'end', "RM", text="Record Macro", values="Press\ the\ ESCAPE\ key\ (ESC)\ to\ stop\ recording")
+        tree.insert("", 'end', "CL", text="Console Logs", values="Displays\ auxiliary\ printout")
+        tree.insert("", 'end', "Keys", text="Keys for macro", values="")
+        categories = [('Virtual Keys', values), ('Direct Keys', dik), ('Mouse X Buttons', mouse_buttons_values)];
+        for category in categories:
+            tree.insert("Keys", 'end', str(category[0]), text=category[0], values=(category[0]))
             for key in category[1]:
                 tree.insert(str(category[0]), 'end', text=str(key), values=(str(category[1][key])))
 
         tree.pack(fill=BOTH, expand=True)
 
+    def open_console(self):
+        console_window = Toplevel(self)
+        console_window.tk.call('wm', 'iconphoto', console_window._w, self.console_icon)
+        console_window.wm_title("Console Logs")
+        text_box = Text(console_window)
+        text_box.config(state="disabled")
+        text_box.pack()
+        pl = PrintLogger(text_box)
+        # replace sys.stdout with our object
+        # sys.stdout = pl
+
     def stop_macro(self):
         self.__script.stop_macro()
-        # record_macro()
 
     def record_macro(self):
-        pass
-        # record_macro()
+        self.button_import_file.config(state="disabled")
+        self.button_reload.config(state="disabled")
+        self.button_target_program.config(state="disabled")
+        self.button_show_program.config(state="disabled")
+        self.button_toggle.config(state="disabled")
+        self.button_force_stop.config(state="disabled")
+        self.button_record_macro.config(state="disabled")
+        self.button_help.config(state="disabled")
+        self.button_console.config(state="disabled")
+        self.__script.load_recorded_macro = self.load_recorded_macro
+        self.__script.record_macro = True
 
     def set_handle(self, selection, window):
         if selection['values'] != '':
@@ -277,6 +309,27 @@ class MainActivity(Frame):
         #     # self.key_press(win32con.VK_F5, 1.0)
         #     handle = int(self.__window_manager.get_handle())
         #     self.__script.press_shortcut(0)
+
+
+    def load_recorded_macro(self, file_path):
+        self.button_import_file.config(state="normal")
+        self.button_reload.config(state="normal")
+        self.button_target_program.config(state="normal")
+        self.button_show_program.config(state="normal")
+        self.button_toggle.config(state="normal")
+        self.button_force_stop.config(state="normal")
+        self.button_record_macro.config(state="normal")
+        self.button_help.config(state="normal")
+        self.button_console.config(state="normal")
+        self.__script.record_macro = False
+        if file_path:
+            self.__script.load_json(file_path)
+            self.__script_path = file_path
+            self.data_title.set(self.__script.title)
+            self.data_shortcuts.set(', '.join(str(x[0]).replace("VK_", "") for x in self.__script.shortcuts))
+            self.button_reload.config(state="normal")
+            self.button_edit_file.config(state="normal")
+            self.button_total_time.config(state="normal")
 
 
 if __name__ == '__main__':

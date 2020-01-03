@@ -306,24 +306,23 @@ class JsonEditor:
         Allows editing of key and value in case of a <dict> item and only value in case of <list> item.
         """
         selection = self.get_selected_index()
-
+        key_value_pair = self.get_key_value_pair(selection)
         is_parent_dict = self.tree.tag_has(Tags.DICT, self.tree.parent(selection))
         is_leaf = self.tree.tag_has(Tags.LEAF, selection)
 
         if is_parent_dict and mb.askyesno("Confirm?", "Edit key?"):
-            key = sd.askstring("Key Input", "new key = ")
+            key = sd.askstring("Key Input", "new key = ", initialvalue=key_value_pair[0])
 
-            if self.verify_key(key):
+            if key and self.verify_key(key):
                 if self.tree.tag_has(Tags.DICT, selection):
                     key += '={}'
                 elif self.tree.tag_has(Tags.LIST, selection):
                     key += '=[]'
 
             self.edit_item(selection, key=key)
-
         if is_leaf and mb.askyesno("Confirm?", "Edit Value?"):
-            value = sd.askstring("Value Input", "new value = ")
-            if self.verify_value(value):
+            value = sd.askstring("Value Input", "new value = ", initialvalue=key_value_pair[1])
+            if value and self.verify_value(value):
                 self.edit_item(selection, value=value)
 
     def remove_item(self, index):
