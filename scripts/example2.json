@@ -1,5 +1,5 @@
 {
-    "title": "Direct Input Script",
+    "title": "Test Mouse Script",
     "macros": [
         {
             "title": "Press mouse click",
@@ -24,8 +24,8 @@
                     "wait": 1000,
                     "times": 1,
                     "point": {
-                        "x": 200,
-                        "y": 200
+                        "x": 0,
+                        "y": 0
                     }
                 }
             ]

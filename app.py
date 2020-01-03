@@ -227,6 +227,7 @@ class MainActivity(Frame):
 
     def help(self):
         help_window = Toplevel(self)
+        help_window.geometry('600x300')
         help_window.tk.call('wm', 'iconphoto', help_window._w, self.help_icon)
         help_window.wm_title("Help Keys ID")
         tree = ttk.Treeview(help_window, columns=("value"))
@@ -247,6 +248,7 @@ class MainActivity(Frame):
         tree.insert("", 'end', "RM", text="Record Macro", values="Press\ the\ ESCAPE\ key\ (ESC)\ to\ stop\ recording")
         tree.insert("", 'end', "CL", text="Console Logs", values="Displays\ auxiliary\ printout")
         tree.insert("", 'end', "Keys", text="Keys for macro", values="")
+        tree.insert("", 'end', "Version", text="Version", values="2.0 © Flasher")
         categories = [('Virtual Keys', values), ('Direct Keys', dik), ('Mouse X Buttons', mouse_buttons_values)];
         for category in categories:
             tree.insert("Keys", 'end', str(category[0]), text=category[0], values=(category[0]))
@@ -264,7 +266,7 @@ class MainActivity(Frame):
         text_box.pack()
         pl = PrintLogger(text_box)
         # replace sys.stdout with our object
-        # sys.stdout = pl
+        sys.stdout = pl
 
     def stop_macro(self):
         self.__script.stop_macro()

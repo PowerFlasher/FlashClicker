@@ -252,18 +252,24 @@ class Script(threading.Thread):
         time.sleep(wait / 1000.0)
 
     def mouse_click(self, button, time_press, wait, point):
-        client_pos = (point['x'], point['y'])
-        # client_pos = win32gui.ScreenToClient(self.__hwnd, (point['x'], point['y']))1
+        # client_pos = (point['x'], point['y'])
+        client_pos = win32gui.ScreenToClient(self.__hwnd, (point['x'], point['y']))
         lParam = win32api.MAKELONG(client_pos[0], client_pos[1])
+        cur_pos = win32api.GetCursorPos()
+        win32api.SetCursorPos(client_pos)
+        print(client_pos, lParam)
         if button == "left":
-            win32gui.PostMessage(self.__hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lParam)
+            win32api.PostMessage(self.__hwnd, win32con.WM_MOUSEMOVE, 0, lParam)
+            win32api.PostMessage(self.__hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lParam)
             time.sleep(time_press / 1000.0)
-            win32gui.PostMessage(self.__hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, lParam)
+            win32api.PostMessage(self.__hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, lParam)
         elif button == "right":
-            win32gui.PostMessage(self.__hwnd, win32con.WM_RBUTTONDOWN, win32con.MK_RBUTTON, lParam)
+            win32api.PostMessage(self.__hwnd, win32con.WM_MOUSEMOVE, 0, lParam)
+            win32api.PostMessage(self.__hwnd, win32con.WM_RBUTTONDOWN, win32con.MK_RBUTTON, lParam)
             time.sleep(time_press / 1000.0)
-            win32gui.PostMessage(self.__hwnd, win32con.WM_RBUTTONUP, win32con.MK_RBUTTON, lParam)
+            win32api.PostMessage(self.__hwnd, win32con.WM_RBUTTONUP, win32con.MK_RBUTTON, lParam)
         time.sleep(wait / 1000.0)
+        win32api.SetCursorPos(cur_pos)
 
     def get_cursor_pos(self):
         pos = win32gui.GetCursorPos()
