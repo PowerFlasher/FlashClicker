@@ -5,9 +5,10 @@ class PrintLogger(): # create file like object
         self.textbox = textbox # keep ref
 
     def write(self, text):
-        self.textbox.configure(state='normal')
-        self.textbox.insert(tk.END, text) # write text to textbox
-        self.textbox.configure(state='disabled')
+    	if self.textbox:
+	        self.textbox.configure(state='normal')
+	        self.textbox.insert(tk.END, text) # write text to textbox
+	        self.textbox.configure(state='disabled')
             # could also scroll to end of textbox here to make sure always visible
 
     def flush(self): # needed for file like object

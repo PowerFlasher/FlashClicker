@@ -56,6 +56,7 @@ class Script(threading.Thread):
         threading.Thread.__init__(self)
         self.__hwnd = None
         self.load_recorded_macro = None
+        self.set_action_text = None
         self.data = None
         self.title = None
         self.shortcuts = []
@@ -86,14 +87,14 @@ class Script(threading.Thread):
 
 
     def get_text_key(self, text):
-        if 'DIK' in text:
-            key = dik.get(text)
-        elif 'MK' in text:
-            key = mouse_buttons_values.get(text)
+        if 'DIK' in str(text):
+            key = dik.get(str(text))
+        elif 'MK' in str(text):
+            key = mouse_buttons_values.get(str(text))
         else:
-            key = values.get(text)
-            if key == None and len(text) == 1:
-                key = ord(text)
+            key = values.get(str(text))
+            if key == None and len(str(text)) == 1:
+                key = ord(str(text))
         return key
 
 
@@ -235,20 +236,25 @@ class Script(threading.Thread):
 
 
     def key_press(self, key, time_press, wait, action):
+        self.set_action_text('Press key: ' + str(key))
         if action == 'chat':
             for ch in key:
                 k = self.get_text_key(ch)
+                print('Key press: {}'.format(k))
                 win32api.PostMessage(self.__hwnd, win32con.WM_CHAR, k, 0)
         elif action == 'virtual_key':
+            print('Key press: {}'.format(key))
             key = self.get_text_key(key)
             win32api.PostMessage(self.__hwnd, win32con.WM_KEYDOWN, key, 0)
             time.sleep(time_press / 1000.0)
             win32api.PostMessage(self.__hwnd, win32con.WM_KEYUP, key, 0)
         elif action == 'direct_key':
+            print('Key press: {}'.format(key))
             key = self.get_text_key(key)
             self.dirkey.press_key(key)
             time.sleep(time_press / 1000.0)
             self.dirkey.release_key(key)
+        self.set_action_text('Waiting')
         time.sleep(wait / 1000.0)
 
     def mouse_click(self, button, time_press, wait, point):
@@ -257,7 +263,8 @@ class Script(threading.Thread):
         lParam = win32api.MAKELONG(client_pos[0], client_pos[1])
         cur_pos = win32api.GetCursorPos()
         win32api.SetCursorPos(client_pos)
-        print(client_pos, lParam)
+        print('Mouse click: {} at position x={}, y={}, with client position by window x={}, y={}'.format(button, point['x'], point['y'], client_pos[0], client_pos[1]))
+        self.set_action_text('Press ' + str(button) + ' mouse key at position: x=' + str(point['x']) + ', y=' + str(point['y']))
         if button == "left":
             win32api.PostMessage(self.__hwnd, win32con.WM_MOUSEMOVE, 0, lParam)
             win32api.PostMessage(self.__hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lParam)
@@ -268,12 +275,13 @@ class Script(threading.Thread):
             win32api.PostMessage(self.__hwnd, win32con.WM_RBUTTONDOWN, win32con.MK_RBUTTON, lParam)
             time.sleep(time_press / 1000.0)
             win32api.PostMessage(self.__hwnd, win32con.WM_RBUTTONUP, win32con.MK_RBUTTON, lParam)
-        time.sleep(wait / 1000.0)
         win32api.SetCursorPos(cur_pos)
+        self.set_action_text('Waiting')
+        time.sleep(wait / 1000.0)
 
     def get_cursor_pos(self):
         pos = win32gui.GetCursorPos()
-        print('x={}, y={}'.format(pos[0], pos[1]))
+        print('Cursor position at x={}, y={}'.format(pos[0], pos[1]))
 
 
     def press_shortcut(self, idx):
@@ -330,3 +338,4 @@ class Script(threading.Thread):
                 break
         else:
             self.status_text.set('STOPPED')
+        self.set_action_text('')

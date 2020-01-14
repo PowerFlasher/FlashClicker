@@ -74,6 +74,9 @@ class MainActivity(Frame):
         ttk.Label(status_labelsFrame, text="Status:", font=self.labelFont).grid(column=0, row=2, sticky='W')
         self.status_text = StringVar()
         ttk.Label(status_labelsFrame, textvariable=self.status_text, font=self.labelFont).grid(column=1, row=2, sticky='W')
+        self.action_text = StringVar()
+        ttk.Label(status_labelsFrame, text="Action:", font=self.labelFont).grid(column=0, row=3, sticky='W')
+        ttk.Label(status_labelsFrame, textvariable=self.action_text, font=self.labelFont).grid(column=1, row=3, sticky='W')
         status_labelsFrame.pack(fill="both", padx=10)
         # End Info data Label
         center_frame.pack_propagate(False)
@@ -135,7 +138,12 @@ class MainActivity(Frame):
         progress_bar.pack()
         self.__script.progress_bar = progress_bar
         self.__script.set_status_info(self.macro_title, self.macro_key, self.status_text)
+        self.__script.load_recorded_macro = self.load_recorded_macro
+        self.__script.set_action_text = self.set_action_text
 
+
+    def set_action_text(self, text):
+        self.action_text.set(text)
 
     def open_file(self):
         self.__script_path = filedialog.askopenfilename(initialdir=self.initialdir, title="Select Script File", filetypes=[("JSON files","*.json")])
@@ -248,7 +256,7 @@ class MainActivity(Frame):
         tree.insert("", 'end', "RM", text="Record Macro", values="Press\ the\ ESCAPE\ key\ (ESC)\ to\ stop\ recording")
         tree.insert("", 'end', "CL", text="Console Logs", values="Displays\ auxiliary\ printout")
         tree.insert("", 'end', "Keys", text="Keys for macro", values="")
-        tree.insert("", 'end', "Version", text="Version", values="2.0 © Flasher")
+        tree.insert("", 'end', "Version", text="Version", values="2.0\ ©\ Flasher")
         categories = [('Virtual Keys', values), ('Direct Keys', dik), ('Mouse X Buttons', mouse_buttons_values)];
         for category in categories:
             tree.insert("Keys", 'end', str(category[0]), text=category[0], values=(category[0]))
@@ -281,7 +289,6 @@ class MainActivity(Frame):
         self.button_record_macro.config(state="disabled")
         self.button_help.config(state="disabled")
         self.button_console.config(state="disabled")
-        self.__script.load_recorded_macro = self.load_recorded_macro
         self.__script.record_macro = True
 
     def set_handle(self, selection, window):
