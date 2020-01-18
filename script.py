@@ -9,7 +9,7 @@ import ctypes
 import os
 from ctypes import wintypes, c_void_p, c_int, windll, CFUNCTYPE, POINTER
 from hotkey import Dirkey, keys, values, dik, MouseInput, mouse_buttons_keys, mouse_buttons_values
-from macro_recorder import on_press, on_release
+from macro_recorder import MacroRecorder
 # from pynput import keyboard
 
 WH_KEYBOARD_LL = win32con.WH_KEYBOARD_LL     
@@ -71,6 +71,7 @@ class Script(threading.Thread):
         self.macro_key = None
         self.status_text = None
         self.record_macro = False
+        self.macro_recorder = MacroRecorder()
         # 
         self.daemon = True
         self.hooked = [None, None]
@@ -202,9 +203,9 @@ class Script(threading.Thread):
     def key_hook_proc(self, nCode, wParam, lParam):
         if self.record_macro:
             if wParam in PRESS_MESSAGES:
-                on_press(chr(lParam[0]) if keys.get(hex(lParam[0])) is None else keys.get(hex(lParam[0])))
+                self.macro_recorder.on_press(chr(lParam[0]) if keys.get(hex(lParam[0])) is None else keys.get(hex(lParam[0])))
             if wParam in RELEASE_MESSAGES:
-                on_release(chr(lParam[0]) if keys.get(hex(lParam[0])) is None else keys.get(hex(lParam[0])), self.load_recorded_macro)
+                self.macro_recorder.on_release(chr(lParam[0]) if keys.get(hex(lParam[0])) is None else keys.get(hex(lParam[0])), self.load_recorded_macro)
         if wParam is not WM_KEYDOWN:
             return ctypes.windll.user32.CallNextHookEx(self.hooked[0], nCode, wParam, lParam)
         if self.get_key_text(lParam[0]) and "VK_F10" == self.get_key_text(lParam[0]):
