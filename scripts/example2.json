@@ -1,5 +1,6 @@
 {
     "title": "Test Mouse Script",
+    "infinity": true,
     "macros": [
         {
             "title": "Press mouse click",

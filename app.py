@@ -154,6 +154,10 @@ class MainActivity(Frame):
             self.button_reload.config(state="normal")
             self.button_edit_file.config(state="normal")
             self.button_total_time.config(state="normal")
+            if self.__script.infinity:
+                self.button_toggle.config(text="Infinite", image=self.infinity_icon)
+            else:
+                self.button_toggle.config(text="Finite", image=self.numeric_icon)
 
     def reload(self):
         if self.__script_path:
@@ -246,6 +250,8 @@ class MainActivity(Frame):
         tree.heading("#0", text="Key", anchor=W)
         tree.column("value", width=450)
         tree.heading("value", text="Value", anchor=W)
+        tree.insert("", 'end', "Attr", text="Attributes", values="")
+        tree.insert("Attr", 'end', "infinity", text="infinity", values="Set\ the\ attribute\ to\ true\ if\ you\ want\ the\ script\ to\ run\ forever\ when\ the\ script\ loads")
         tree.insert("", 'end', "GCP", text="Get Cursor Position", values="Use\ the\ F10\ key\ to\ record\ the\ cursor\ coordinate\ (print\ is\ in\ the\ Console\ Logs)")
         tree.insert("", 'end', "IF", text="Import File", values="Import\ the\ correct\ json\ file\ with\ the\ macro")
         tree.insert("", 'end', "RB", text="Refresh Button", values="If\ you\ make\ a\ change\ to\ the\ file,\ just\ reload\ the\ file")

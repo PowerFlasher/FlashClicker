@@ -142,6 +142,7 @@ class Script(threading.Thread):
                     self.data = json.load(data_file)
                     # data_file.close()
                     self.title = self.data['title']
+                    self.infinity = self.data['infinity']
                     for idx, macro in enumerate(self.data['macros']):
                         self.shortcuts.append((str(macro['shortcut']), idx))
             except FileNotFoundError():
